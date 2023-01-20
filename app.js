@@ -40,19 +40,6 @@ app.get("/players/", async (request, response) => {
   response.send(playersArray);
 });
 
-app.get("/players/:playerId/", async (request, response) => {
-  const { playerId } = request.params;
-  const getPlayersQuery = `
-    SELECT
-      * 
-    FROM 
-      cricket_team 
-    WHERE 
-      player_id = ${playerId};`;
-  const player = await db.get(getPlayersQuery);
-  response.send(player);
-});
-
 app.post("/players/", async (request, response) => {
   const playerDetails = request.body;
   const { playerName, jerseyNumber, role } = playerDetails;
@@ -67,8 +54,48 @@ app.post("/players/", async (request, response) => {
             );`;
 
   const dbResponse = await db.run(addPlayerQuery);
-  const playerId = dbResponse.lastID;
-  response.send({ playerId: playerId });
+  const player_id = dbResponse.lastID;
+  response.send("Player Added to Team");
 });
 
-app.listen(3000);
+app.get("/players/:player_id/", async (request, response) => {
+  const { player_id } = request.params;
+  const getPlayersQuery = `
+    SELECT
+      * 
+    FROM 
+      cricket_team 
+    WHERE 
+      player_id = ${player_id};`;
+  const player = await db.get(getPlayersQuery);
+  response.send(player);
+});
+
+app.put("/players/:player_id/", async (request, response) => {
+  const { player_id } = request.params;
+  const playerDetails = request.body;
+  const { playerName, jerseyNumber, role } = playerDetails;
+  const updatePlayerQuery = `
+    UPDATE
+      cricket_team
+    SET
+      playerName = '${playerName}',
+      jerseyNumber = '${jerseyNumber}',
+      role = '${role}'
+    WHERE
+      player_id = ${player_id}`;
+  await db.run(updatePlayerQuery);
+  response.send("Player Details Updated");
+});
+
+app.delete("/players/:player_id/", async (request, response) => {
+  const { player_id } = request.params;
+  const deletePlayerQuery = `DELETE FROM
+      cricket_team
+    WHERE 
+      player_id = ${player_id};`;
+  await db.run(deletePlayerQuery);
+  response.send("Player Removed");
+});
+
+module.exports = app.js;
